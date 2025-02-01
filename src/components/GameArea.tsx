@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { X, Circle, Square } from "lucide-react";
+import { X, Circle } from "lucide-react";
 import { Playfair_Display, Montserrat } from "next/font/google";
 import axios from "axios";
 import { environment } from "@/connections/socket";
@@ -10,6 +10,17 @@ import { environment } from "@/connections/socket";
 const playfair = Playfair_Display({ subsets: ["latin"] });
 const montserrat = Montserrat({ subsets: ["latin"] });
 
+interface GameProps {
+  data: { player1: string; player2: string };
+  socket: WebSocket | null;
+  currentPlayer: { _id: string; name: string };
+  setGameStart: (value: boolean) => void;
+  setGameRequestPopup: (value: boolean) => void;
+  handlingWhileMessage: (event: MessageEvent) => void;
+}
+
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function Game({
   data,
   socket,
@@ -17,11 +28,16 @@ function Game({
   setGameStart,
   setGameRequestPopup,
   handlingWhileMessage,
-}: any) {
+}: GameProps) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [board, setBoard] = useState<string[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [winner, setWinner] = useState<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [player1, setPlayer1] = useState<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [player2, setPlayer2] = useState<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [currentMovePlayer, setCurrentMovePlayer] = useState<any>(null); // current move player _id
   const [showWinner, setShowWinner] = useState<boolean>(false);
   const [countdown, setCountdown] = useState(2);
@@ -50,9 +66,9 @@ function Game({
     <motion.button
       className="w-20 h-20 bg-gray-700 border border-yellow-400 flex items-center justify-center text-4xl font-bold rounded-md"
       onClick={() => {
-        currentMovePlayer === currentPlayer._id &&
-          !board[index] &&
+        if (currentMovePlayer === currentPlayer._id && !board[index]) {
           handleClick(index);
+        }
       }}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
@@ -76,6 +92,7 @@ function Game({
     socket?.send(JSON.stringify(dataToSend));
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handlingGameWhileMessage = async (event: any) => {
     const data = JSON.parse(event.data);
     if (data.type === "move") {
@@ -111,13 +128,20 @@ function Game({
     setCurrentMovePlayer(null);
     setShowWinner(false);
     setGameRequestPopup(false);
-    socket.onmessage = handlingWhileMessage;
+    if (socket) {
+      socket.onmessage = handlingWhileMessage;
+    }
+    
+    // socket?.onmessage = handlingWhileMessage;
     setCountdown(2); // Reset countdown for the next game
   };
 
   useEffect(() => {
     console.log("socketgameArea", socket);
-    socket.onmessage = handlingGameWhileMessage;
+    if (socket) {
+      socket.onmessage = handlingGameWhileMessage;
+    }
+    // socket?.onmessage = handlingGameWhileMessage;
   }, [socket]);
 
   useEffect(() => {
@@ -135,21 +159,41 @@ function Game({
     }
   }, [board]);
 
+  // useEffect(() => {
+  //   if (winner && showWinner) {
+  //     let timer = setInterval(() => {
+  //       setCountdown((prev) => prev - 1);
+  //     }, 1000);
+
+  //     // When countdown reaches 0, reset the game and stop the timer
+  //     const timeout = setTimeout(() => {
+  //       setShowWinner(false); // Hide the winner modal
+  //       setGameStart(false); // End the game
+  //       resetGame(); // Reset the game state
+  //       setCountdown(2); // Reset the countdown value
+  //     }, 2000);
+
+  //     // Clean up the interval and timeout
+  //     return () => {
+  //       clearInterval(timer);
+  //       clearTimeout(timeout);
+  //     };
+  //   }
+  // }, [winner, showWinner]);
+
   useEffect(() => {
     if (winner && showWinner) {
-      let timer = setInterval(() => {
+      const timer = setInterval(() => {  // ✅ Use 'const' instead of 'let'
         setCountdown((prev) => prev - 1);
       }, 1000);
-
-      // When countdown reaches 0, reset the game and stop the timer
+  
       const timeout = setTimeout(() => {
         setShowWinner(false); // Hide the winner modal
         setGameStart(false); // End the game
         resetGame(); // Reset the game state
         setCountdown(2); // Reset the countdown value
       }, 2000);
-
-      // Clean up the interval and timeout
+  
       return () => {
         clearInterval(timer);
         clearTimeout(timeout);
@@ -256,6 +300,7 @@ function Game({
 
 export default Game;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const calculateWinner = (squares: any) => {
   const lines = [
     [0, 1, 2],

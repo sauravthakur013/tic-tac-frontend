@@ -13,6 +13,12 @@ import { environment } from "@/connections/socket";
 const playfair = Playfair_Display({ subsets: ["latin"] });
 const montserrat = Montserrat({ subsets: ["latin"] });
 
+interface Player {
+  _id: string;
+  name: string;
+  isReady: boolean;
+}
+
 function GamePage() {
   // primary parameters
   const [socket, setSocket] = useState<WebSocket | null>(null);
@@ -21,38 +27,48 @@ function GamePage() {
   const router = useRouter()
 
   // secondary parameters
-  const [allPlayersList, setAllPlayersList] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [allPlayersList, setAllPlayersList] = useState<any>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [currentPlayer, setCurrentPlayer] = useState<any>(null);
 
   // handle game request from other player
   const [gameRequestPopup, setGameRequestPopup] = useState<boolean>(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [requestPlayer, setRequestPlayer] = useState<any>(null);
   const [senderPopup, setSenderPopup] = useState<boolean>(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [senderPlayer, setSenderPlayer] = useState<any>(null);
   const [countdown, setCountdown] = useState<number>(10);
   const [countdownGameRequest, setCountdownGameRequest] = useState<number>(10);
 
   // final stage of start game
   const [gameStart, setGameStart] = useState<boolean>(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [gameplayers, setGameplayers] = useState<any>(null);
 
-  const handlingWhileOpen = async (event: any) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handlingWhileOpen = async () => {
     socket?.send(
       JSON.stringify({ type: "setName", name: name || "player456" })
     );
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updateAllPlayersListAndCurrentPlayer = async (data: any) => {
     const allPlayersList = data.payload;
     const currentPlayer = allPlayersList.find(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (player: any) => player.name === name
     );
     setAllPlayersList(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       allPlayersList.filter((player: any) => player.name !== name)
     );
     setCurrentPlayer(currentPlayer);
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const gettingNewRequest = async (data: any) => {
     if (data?.fromPlayerId) {
       setGameRequestPopup(true);
@@ -63,10 +79,12 @@ function GamePage() {
     }
   };
 
-  const handlingWhileClose = async (event: any) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handlingWhileClose = async () => {
     console.log("connection closed");
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handlingWhileMessage = async (event: any) => {
     const data = JSON.parse(event.data);
     if (data.type === "broadcastToAll") {
@@ -102,12 +120,13 @@ function GamePage() {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleWhileError = async (error: any) => {
     console.log(error);
   };
 
   const functionForConnection = async () => {
-    const socket = await new WebSocket(environment.SOCKET_API);
+    const socket = await new WebSocket(environment.SOCKET_API_PROD);
     setSocket(socket);
   };
 
@@ -117,6 +136,7 @@ function GamePage() {
     functionForConnection();
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const makeConnection = async (player: any) => {
     if (socket) {
       const payload = JSON.stringify({
@@ -243,7 +263,8 @@ function GamePage() {
         </h2>
         {allPlayersList.length > 0 ? (
           <ul className="space-y-2">
-            {allPlayersList.map((player: any, idx: number) => (
+            
+            {allPlayersList.map((player: Player, idx: number) => (
               <motion.li
                 key={idx}
                 className="bg-gray-700 p-3 rounded-md flex items-center justify-between cursor-pointer hover:bg-gray-600 transition-colors"
@@ -389,7 +410,7 @@ function GamePage() {
         {gameStart && (
           <GameArea
             data={gameplayers}
-            socket={gameStart && socket}
+            socket={socket && socket}
             handlingWhileMessage={handlingWhileMessage}
             currentPlayer={currentPlayer}
             setGameStart={setGameStart}
